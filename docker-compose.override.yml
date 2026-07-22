@@ -1,0 +1,53 @@
+services:
+  web:
+    env_file:
+      - ./config/prod.env
+      - .env
+    volumes:
+      - /srv/wger/media:/home/wger/media
+      - /srv/wger/static:/home/wger/static
+    depends_on: !reset []
+
+  celery_worker:
+    env_file:
+      - ./config/prod.env
+      - .env
+    volumes:
+      - /srv/wger/media:/home/wger/media
+    depends_on: !reset []
+
+  celery_beat:
+    env_file:
+      - ./config/prod.env
+      - .env
+    volumes:
+      - /srv/wger/media:/home/wger/media
+      - /srv/wger/celery-beat:/home/wger/beat
+    depends_on: !reset []
+
+  powersync:
+    env_file:
+      - ./config/prod.env
+      - .env
+    depends_on: !reset
+      web:
+        condition: service_healthy
+
+  nginx:
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /srv/wger/media:/wger/media:ro
+      - /srv/wger/static:/wger/static:ro
+    ports: !override
+      - "8080:80"
+
+  # Turn database containers
+  db:
+    scale: 0
+    volumes: !reset []
+
+  cache:
+    scale: 0
+    volumes: !reset []
+
+volumes: !reset {}
