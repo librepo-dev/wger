@@ -1,0 +1,26 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Runs automatically every day at 3:00 AM UTC
+  workflow_dispatch:     # Allows you to trigger it manually anytime
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync upstream changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git remote add upstream https://github.com/wger-project/docker.git
+          git fetch upstream
+          git checkout master
+          git merge upstream/master --no-edit || exit 0
+          git push origin master
