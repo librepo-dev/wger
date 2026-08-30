@@ -25,8 +25,12 @@ services:
       - media:/home/wger/media
     expose:
       - 8000
+    # Give gunicorn time to finish in-flight requests on shutdown
+    stop_grace_period: 60s
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
+      # Use a GET request (not --spider, which sends HEAD and makes gunicorn log
+      # a warning on every check) against the lightweight version endpoint
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O", "/dev/null", "http://localhost:8000/api/v2/version/"]
       interval: 10s
       timeout: 5s
       start_period: 300s
@@ -139,6 +143,9 @@ networks:
   default:
     name: wger_network
 
+# If you get an "additional properties 'extends' not allowed"-error, your compose version
+# is too old (this needs at least 5.x). If you remove the "db" and "redis" services from
+# this file, you should be able to start the stack.
 include:
   - path: ./services/postgres.yaml
   - path: ./services/powersync.yaml
